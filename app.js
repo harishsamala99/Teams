@@ -4,6 +4,7 @@ class LeagueState {
     this.teams = [];
     this.fixtures = [];
     this.onChange = null;
+    this.saveQueue = Promise.resolve();
     this.loadState();
   }
 
@@ -33,11 +34,15 @@ class LeagueState {
   saveState() {
     localStorage.setItem('apex_teams', JSON.stringify(this.teams));
     localStorage.setItem('apex_fixtures', JSON.stringify(this.fixtures));
-    fetch('/api/state', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ teams: this.teams, fixtures: this.fixtures })
-    }).catch(() => {});
+    const stateSnapshot = JSON.stringify({ teams: this.teams, fixtures: this.fixtures });
+    this.saveQueue = this.saveQueue
+      .catch(() => {})
+      .then(() => fetch('/api/state', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: stateSnapshot
+      }))
+      .catch(() => {});
   }
 
   async syncFromServer() {
@@ -379,12 +384,14 @@ class LeagueState {
   saveFixtureResult(id, homeScore, awayScore, isCompleted, goals = []) {
     const fixture = this.fixtures.find(f => f.id === id);
     if (fixture) {
-      fixture.homeScore = parseInt(homeScore);
-      fixture.awayScore = parseInt(awayScore);
+      fixture.homeScore = Math.max(0, parseInt(homeScore, 10) || 0);
+      fixture.awayScore = Math.max(0, parseInt(awayScore, 10) || 0);
       fixture.status = isCompleted ? 'completed' : 'scheduled';
       fixture.goals = isCompleted ? goals : [];
       this.saveState();
+      return true;
     }
+    return false;
   }
 
   deleteFixture(id) {
@@ -542,6 +549,9 @@ class LeagueApp {
 
     // Standings table
     this.standingsTableBody = document.getElementById('standings-tbody');
+    this.shareStandingsBtn = document.getElementById('share-standings-btn');
+    this.shareStandingsModal = document.getElementById('share-standings-modal');
+    this.shareStandingsText = document.getElementById('share-standings-text');
 
     // Fixtures items
     this.fixturesList = document.getElementById('fixtures-list');
@@ -625,6 +635,11 @@ class LeagueApp {
     // Open modals buttons
     this.addTeamBtn.addEventListener('click', () => this.openTeamModal());
     this.addFixtureBtn.addEventListener('click', () => this.openFixtureModal());
+    this.shareStandingsBtn.addEventListener('click', () => this.shareStandings());
+    document.getElementById('copy-standings-btn').addEventListener('click', () => this.copyStandings());
+    document.getElementById('system-share-standings-btn').addEventListener('click', () => this.openSystemShare());
+    document.getElementById('share-standings-image-btn').addEventListener('click', () => this.shareStandingsImage());
+    document.getElementById('download-standings-image-btn').addEventListener('click', () => this.downloadStandingsImage());
 
     // Close modals
     document.querySelectorAll('[data-close]').forEach(btn => {
@@ -704,6 +719,149 @@ class LeagueApp {
     } else if (activeTab === 'teams') {
       this.renderTeamsTab();
     }
+  }
+
+  getStandingsShareText() {
+    const standings = this.state.calculateStandings();
+    const lines = standings.length
+      ? standings.map((team, index) => `${index + 1}. ${team.name} - ${team.points} pts (P${team.played} W${team.wins} D${team.draws} L${team.losses}, GD ${team.goalDifference})`)
+      : ['No teams have been added yet.'];
+    return `Apex League Standings\n\n${lines.join('\n')}`;
+  }
+
+  shareStandings() {
+    const shareText = this.getStandingsShareText();
+    this.shareStandingsText.value = shareText;
+    const encodedText = encodeURIComponent(shareText);
+    document.getElementById('whatsapp-standings-link').href = `https://wa.me/?text=${encodedText}`;
+    document.getElementById('email-standings-link').href = `mailto:?subject=${encodeURIComponent('Apex League Standings')}&body=${encodedText}`;
+    document.getElementById('system-share-standings-btn').hidden = !navigator.share;
+    this.shareStandingsModal.classList.add('active');
+    this.shareStandingsText.focus();
+    lucide.createIcons();
+  }
+
+  async openSystemShare() {
+    try {
+      await navigator.share({ title: 'Apex League Standings', text: this.getStandingsShareText() });
+    } catch (error) {
+      if (error.name !== 'AbortError') alert('Unable to open the share menu.');
+    }
+  }
+
+  async copyStandings() {
+    const text = this.shareStandingsText.value;
+    try {
+      if (navigator.clipboard) await navigator.clipboard.writeText(text);
+      else throw new Error('Clipboard API unavailable');
+    } catch (error) {
+      this.shareStandingsText.select();
+      document.execCommand('copy');
+    }
+    const copyButton = document.getElementById('copy-standings-btn');
+    copyButton.querySelector('span').textContent = 'Copied';
+    setTimeout(() => { copyButton.querySelector('span').textContent = 'Copy'; }, 1500);
+  }
+
+  createStandingsImage() {
+    const standings = this.state.calculateStandings();
+    const canvas = document.createElement('canvas');
+    const columns = ['Pos', 'Team', 'P', 'W', 'D', 'L', 'GF', 'GA', 'GD', 'PTS'];
+    const columnWidths = [90, 310, 70, 70, 70, 70, 85, 85, 85, 95];
+    const sidePadding = 32;
+    const rowHeight = 64;
+    const headerHeight = 112;
+    const tableWidth = columnWidths.reduce((sum, width) => sum + width, 0);
+    const logicalWidth = tableWidth + sidePadding * 2;
+    const logicalHeight = headerHeight + Math.max(1, standings.length) * rowHeight + sidePadding * 2;
+    const scale = Math.min(1, 900 / logicalWidth);
+    canvas.width = Math.ceil(logicalWidth * scale);
+    canvas.height = Math.ceil(logicalHeight * scale);
+    const context = canvas.getContext('2d');
+    const tableLeft = sidePadding;
+    context.scale(scale, scale);
+
+    context.fillStyle = '#0b1220';
+    context.fillRect(0, 0, logicalWidth, logicalHeight);
+    context.fillStyle = '#ffffff';
+    context.font = '700 28px Arial';
+    context.fillText('Apex League Standings', tableLeft, 42);
+    context.fillStyle = '#94a3b8';
+    context.font = '14px Arial';
+    context.fillText('League Table', tableLeft, 70);
+    context.fillStyle = '#172235';
+    context.fillRect(tableLeft, headerHeight, tableWidth, rowHeight);
+    context.font = '700 13px Arial';
+    let x = tableLeft;
+    columns.forEach((column, index) => {
+      context.fillStyle = '#cbd5e1';
+      context.textAlign = index === 1 ? 'left' : 'center';
+      context.fillText(column, index === 1 ? x + 12 : x + columnWidths[index] / 2, headerHeight + 39);
+      x += columnWidths[index];
+    });
+
+    standings.forEach((team, rowIndex) => {
+      const y = headerHeight + rowHeight + rowIndex * rowHeight;
+      context.fillStyle = rowIndex % 2 === 0 ? '#101a2b' : '#0d1726';
+      context.fillRect(tableLeft, y, tableWidth, rowHeight);
+      const values = [rowIndex + 1, team.name, team.played, team.wins, team.draws, team.losses, team.goalsFor, team.goalsAgainst, team.goalDifference, team.points];
+      x = tableLeft;
+      values.forEach((value, index) => {
+        context.fillStyle = index === 9 ? '#fbbf24' : '#f8fafc';
+        context.font = index === 1 ? '600 15px Arial' : '14px Arial';
+        context.textAlign = index === 1 ? 'left' : 'center';
+        let text = String(value);
+        if (index === 1 && context.measureText(text).width > columnWidths[index] - 24) {
+          while (text.length > 3 && context.measureText(`${text}...`).width > columnWidths[index] - 24) text = text.slice(0, -1);
+          text += '...';
+        }
+        context.fillText(text, index === 1 ? x + 12 : x + columnWidths[index] / 2, y + 39);
+        x += columnWidths[index];
+      });
+    });
+
+    context.strokeStyle = '#334155';
+    context.lineWidth = 2;
+    context.strokeRect(tableLeft, headerHeight, tableWidth, rowHeight + standings.length * rowHeight);
+    return canvas;
+  }
+
+  async getStandingsImageFile() {
+    const blob = await new Promise(resolve => this.createStandingsImage().toBlob(resolve, 'image/png'));
+    return new File([blob], 'apex-league-standings.png', { type: 'image/png' });
+  }
+
+  async shareStandingsImage() {
+    try {
+      const file = await this.getStandingsImageFile();
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ title: 'Apex League Standings', files: [file] });
+      } else {
+        this.downloadStandingsImage();
+        alert('Image sharing is not supported here. The table image was downloaded instead.');
+      }
+    } catch (error) {
+      if (error.name !== 'AbortError') alert('Unable to share the table image.');
+    }
+  }
+
+  downloadStandingsImage() {
+    this.createStandingsImage().toBlob(blob => {
+      if (!blob) {
+        alert('Unable to create the standings image. Please try again.');
+        return;
+      }
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'apex-league-standings.png';
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(() => {
+        URL.revokeObjectURL(link.href);
+        link.remove();
+      }, 2000);
+    }, 'image/png');
   }
 
   // ==========================================================
@@ -1482,7 +1640,10 @@ class LeagueApp {
       }
     }
 
-    this.state.saveFixtureResult(fixtureId, homeScore, awayScore, isCompleted, goals);
+    if (!this.state.saveFixtureResult(fixtureId, homeScore, awayScore, isCompleted, goals)) {
+      alert('This match could not be found. Please refresh the page and try again.');
+      return;
+    }
     this.resultModal.classList.remove('active');
     this.render();
   }

@@ -142,6 +142,10 @@
               <h2>League Table</h2>
               <p class="panel-subtitle">Automatically calculated based on fixture results</p>
             </div>
+            <button id="share-standings-btn" class="btn btn-secondary-outline btn-sm" type="button" title="Share standings">
+              <i data-lucide="share-2"></i>
+              <span>Share</span>
+            </button>
           </div>
           <div class="table-container">
             <table class="custom-table" id="standings-table">
@@ -166,6 +170,37 @@
           </div>
         </div>
       </section>
+
+      <!-- STANDINGS SHARE PANEL -->
+      <div id="share-standings-modal" class="modal-overlay">
+        <div class="modal-content glass-panel animate-scale share-modal">
+          <div class="modal-header">
+            <h3>Share Standings</h3>
+            <button class="btn-close-modal" data-close="share-standings-modal" type="button">&times;</button>
+          </div>
+          <textarea id="share-standings-text" class="share-preview" readonly aria-label="Standings to share"></textarea>
+          <div class="share-options">
+            <button id="copy-standings-btn" class="btn btn-primary" type="button">
+              <i data-lucide="copy"></i><span>Copy</span>
+            </button>
+            <button id="system-share-standings-btn" class="btn btn-secondary-outline" type="button">
+              <i data-lucide="share-2"></i><span>More Options</span>
+            </button>
+            <button id="share-standings-image-btn" class="btn btn-secondary-outline" type="button">
+              <i data-lucide="image"></i><span>Share Table Image</span>
+            </button>
+            <button id="download-standings-image-btn" class="btn btn-secondary-outline" type="button">
+              <i data-lucide="download"></i><span>Download Image</span>
+            </button>
+            <a id="whatsapp-standings-link" class="btn btn-secondary-outline" target="_blank" rel="noopener" href="#">
+              <i data-lucide="message-circle"></i><span>WhatsApp</span>
+            </a>
+            <a id="email-standings-link" class="btn btn-secondary-outline" href="#">
+              <i data-lucide="mail"></i><span>Email</span>
+            </a>
+          </div>
+        </div>
+      </div>
 
       <!-- FIXTURES TAB -->
       <section id="fixtures" class="tab-content">
@@ -380,6 +415,6 @@
   </div>
 
   <!-- Javascript -->
-  <script src="app.js"></script>
+  <script src="app.js?v=standings-share-3"></script>
 </body>
 </html>
