@@ -726,7 +726,7 @@ class LeagueApp {
     const lines = standings.length
       ? standings.map((team, index) => `${index + 1}. ${team.name} - ${team.points} pts (P${team.played} W${team.wins} D${team.draws} L${team.losses}, GD ${team.goalDifference})`)
       : ['No teams have been added yet.'];
-    return `Apex League Standings\n\n${lines.join('\n')}`;
+    return `E FOOTBALL LEAGUE Standings\n\n${lines.join('\n')}`;
   }
 
   shareStandings() {
@@ -734,7 +734,7 @@ class LeagueApp {
     this.shareStandingsText.value = shareText;
     const encodedText = encodeURIComponent(shareText);
     document.getElementById('whatsapp-standings-link').href = `https://wa.me/?text=${encodedText}`;
-    document.getElementById('email-standings-link').href = `mailto:?subject=${encodeURIComponent('Apex League Standings')}&body=${encodedText}`;
+    document.getElementById('email-standings-link').href = `mailto:?subject=${encodeURIComponent('E FOOTBALL LEAGUE Standings')}&body=${encodedText}`;
     document.getElementById('system-share-standings-btn').hidden = !navigator.share;
     this.shareStandingsModal.classList.add('active');
     this.shareStandingsText.focus();
@@ -743,7 +743,7 @@ class LeagueApp {
 
   async openSystemShare() {
     try {
-      await navigator.share({ title: 'Apex League Standings', text: this.getStandingsShareText() });
+      await navigator.share({ title: 'E FOOTBALL LEAGUE Standings', text: this.getStandingsShareText() });
     } catch (error) {
       if (error.name !== 'AbortError') alert('Unable to open the share menu.');
     }
@@ -785,7 +785,7 @@ class LeagueApp {
     context.fillRect(0, 0, logicalWidth, logicalHeight);
     context.fillStyle = '#ffffff';
     context.font = '700 28px Arial';
-    context.fillText('Apex League Standings', tableLeft, 42);
+    context.fillText('E FOOTBALL LEAGUE Standings', tableLeft, 42);
     context.fillStyle = '#94a3b8';
     context.font = '14px Arial';
     context.fillText('League Table', tableLeft, 70);
@@ -835,7 +835,7 @@ class LeagueApp {
     try {
       const file = await this.getStandingsImageFile();
       if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ title: 'Apex League Standings', files: [file] });
+        await navigator.share({ title: 'E FOOTBALL LEAGUE Standings', files: [file] });
       } else {
         this.downloadStandingsImage();
         alert('Image sharing is not supported here. The table image was downloaded instead.');
