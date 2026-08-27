@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apex League Dashboard</title>
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Manage your soccer league fixtures, teams, rosters, and goal scorer statistics in a premium glassmorphic dashboard.">
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- CSS -->
+  <link rel="stylesheet" href="styles.css">
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-logo">
+        <div class="logo-icon-wrapper">
+          <i data-lucide="trophy" class="logo-icon"></i>
+        </div>
+        <div>
+          <h1>E FOOTBALL LEAGUE</h1>
+          <p class="subtitle">Official Tournament Manager</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="reset-data-btn" class="btn btn-secondary-outline btn-sm">
+          <i data-lucide="rotate-ccw"></i>
+          <span>Clear All Data</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="app-nav">
+      <button class="nav-tab active" data-tab="dashboard">
+        <i data-lucide="layout-dashboard"></i>
+        <span>Dashboard</span>
+      </button>
+      <button class="nav-tab" data-tab="standings">
+        <i data-lucide="list-ordered"></i>
+        <span>Standings</span>
+      </button>
+      <button class="nav-tab" data-tab="fixtures">
+        <i data-lucide="calendar"></i>
+        <span>Fixtures & Results</span>
+      </button>
+      <button class="nav-tab" data-tab="teams">
+        <i data-lucide="users"></i>
+        <span>Teams & Rosters</span>
+      </button>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="app-main">
+      <!-- DASHBOARD TAB -->
+      <section id="dashboard" class="tab-content active">
+        <div class="grid-stats">
+          <!-- Stat Cards -->
+          <div class="stat-card">
+            <div class="stat-info">
+              <span class="stat-label">Total Teams</span>
+              <span id="stat-total-teams" class="stat-value">0</span>
+            </div>
+            <div class="stat-icon-wrapper bg-blue-glow">
+              <i data-lucide="shield"></i>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-info">
+              <span class="stat-label">Matches Played</span>
+              <span id="stat-played-matches" class="stat-value">0</span>
+            </div>
+            <div class="stat-icon-wrapper bg-green-glow">
+              <i data-lucide="swords"></i>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-info">
+              <span class="stat-label">Total Goals</span>
+              <span id="stat-total-goals" class="stat-value">0</span>
+            </div>
+            <div class="stat-icon-wrapper bg-yellow-glow">
+              <i data-lucide="goal"></i>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-info">
+              <span class="stat-label">League Leader</span>
+              <span id="stat-league-leader" class="stat-value">-</span>
+            </div>
+            <div class="stat-icon-wrapper bg-purple-glow">
+              <i data-lucide="crown"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <!-- Left side: Upcoming/Recent Fixtures -->
+          <div class="dashboard-card glass-panel">
+            <div class="card-header">
+              <h2>Key Matches</h2>
+              <button class="btn btn-link btn-sm view-all-fixtures">View All</button>
+            </div>
+            <div class="card-body">
+              <div id="dashboard-matches-list" class="recent-matches-list">
+                <!-- Matches injected here -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Right side: Top Scorers Leaderboard -->
+          <div class="dashboard-card glass-panel">
+            <div class="card-header">
+              <h2>Golden Boot Leaderboard</h2>
+              <i data-lucide="flame" class="icon-accent-orange"></i>
+            </div>
+            <div class="card-body">
+              <div class="leaderboard-table-header">
+                <span>Player</span>
+                <span>Team</span>
+                <span class="text-center">Goals</span>
+              </div>
+              <div id="dashboard-scorers-list" class="leaderboard-list">
+                <!-- Top Scorers injected here -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STANDINGS TAB -->
+      <section id="standings" class="tab-content">
+        <div class="glass-panel">
+          <div class="panel-header">
+            <div>
+              <h2>League Table</h2>
+              <p class="panel-subtitle">Automatically calculated based on fixture results</p>
+            </div>
+          </div>
+          <div class="table-container">
+            <table class="custom-table" id="standings-table">
+              <thead>
+                <tr>
+                  <th width="60">Pos</th>
+                  <th>Team</th>
+                  <th class="text-center">P</th>
+                  <th class="text-center">W</th>
+                  <th class="text-center">D</th>
+                  <th class="text-center">L</th>
+                  <th class="text-center">GF</th>
+                  <th class="text-center">GA</th>
+                  <th class="text-center">GD</th>
+                  <th class="text-center highlight-column">PTS</th>
+                </tr>
+              </thead>
+              <tbody id="standings-tbody">
+                <!-- Standings table rows injected here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- FIXTURES TAB -->
+      <section id="fixtures" class="tab-content">
+        <div class="fixtures-controls glass-panel">
+          <div class="filter-group">
+            <button class="btn btn-filter active" data-filter="all">All Matches</button>
+            <button class="btn btn-filter" data-filter="scheduled">Upcoming</button>
+            <button class="btn btn-filter" data-filter="completed">Results</button>
+          </div>
+          <button id="add-fixture-btn" class="btn btn-primary">
+            <i data-lucide="plus"></i>
+            <span>Schedule Match</span>
+          </button>
+        </div>
+
+        <div id="fixtures-list" class="fixtures-grid">
+          <!-- Fixtures cards injected here -->
+        </div>
+      </section>
+
+      <!-- TEAMS & ROSTERS TAB -->
+      <section id="teams" class="tab-content">
+        <div class="teams-actions">
+          <button id="add-team-btn" class="btn btn-primary">
+            <i data-lucide="plus-circle"></i>
+            <span>Add New Team</span>
+          </button>
+        </div>
+
+        <div id="teams-grid" class="teams-grid-layout">
+          <!-- Team Cards with expansion for Player list will be injected here -->
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer-bar">
+      <p>&copy; 2026 Apex League. Built with high performance client-side calculations.</p>
+    </footer>
+  </div>
+
+  <!-- MODALS -->
+
+  <!-- TEAM MODAL (Add/Edit Team) -->
+  <div id="team-modal" class="modal-overlay">
+    <div class="modal-content glass-panel animate-scale">
+      <div class="modal-header">
+        <h3 id="team-modal-title">Add New Team</h3>
+        <button class="btn-close-modal" data-close="team-modal">&times;</button>
+      </div>
+      <form id="team-form" class="modal-form">
+        <input type="hidden" id="team-id-input">
+        <div class="form-group">
+          <label for="team-name-input">Team Name</label>
+          <input type="text" id="team-name-input" required placeholder="e.g. Phoenix FC" maxlength="30">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary-outline" data-close="team-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Team</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- PLAYER MODAL (Add/Edit Player) -->
+  <div id="player-modal" class="modal-overlay">
+    <div class="modal-content glass-panel animate-scale">
+      <div class="modal-header">
+        <h3 id="player-modal-title">Add Player</h3>
+        <button class="btn-close-modal" data-close="player-modal">&times;</button>
+      </div>
+      <form id="player-form" class="modal-form">
+        <input type="hidden" id="player-id-input">
+        <input type="hidden" id="player-team-id-input">
+        <div class="form-group">
+          <label for="player-name-input">Player Name</label>
+          <input type="text" id="player-name-input" required placeholder="e.g. Leo Messi" maxlength="30">
+        </div>
+        <div class="form-row">
+          <div class="form-group col-6">
+            <label for="player-number-input">Jersey Number</label>
+            <input type="number" id="player-number-input" required min="1" max="99" placeholder="10">
+          </div>
+          <div class="form-group col-6">
+            <label for="player-position-input">Position</label>
+            <select id="player-position-input" required>
+              <option value="Forward">Forward</option>
+              <option value="Midfielder">Midfielder</option>
+              <option value="Defender">Defender</option>
+              <option value="Goalkeeper">Goalkeeper</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary-outline" data-close="player-modal">Cancel</button>
+          <button type="button" id="save-add-player-btn" class="btn btn-secondary-outline">Save &amp; Add Another</button>
+          <button type="submit" class="btn btn-primary">Save Player</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- FIXTURE MODAL (Add/Edit Fixture Details) -->
+  <div id="fixture-modal" class="modal-overlay">
+    <div class="modal-content glass-panel animate-scale">
+      <div class="modal-header">
+        <h3 id="fixture-modal-title">Schedule New Match</h3>
+        <button class="btn-close-modal" data-close="fixture-modal">&times;</button>
+      </div>
+      <form id="fixture-form" class="modal-form">
+        <input type="hidden" id="fixture-id-input">
+        
+        <div class="form-row">
+          <div class="form-group col-6">
+            <label for="fixture-home-input">Home Team</label>
+            <select id="fixture-home-input" required>
+              <option value="" disabled selected>Select Home Team</option>
+              <!-- Options injected dynamically -->
+            </select>
+          </div>
+          <div class="form-group col-6">
+            <label for="fixture-away-input">Away Team</label>
+            <select id="fixture-away-input" required>
+              <option value="" disabled selected>Select Away Team</option>
+              <!-- Options injected dynamically -->
+            </select>
+          </div>
+        </div>
+        <p id="fixture-team-help" class="panel-subtitle" hidden>Add at least two teams in Teams &amp; Rosters before creating a match.</p>
+
+        <div class="form-group">
+          <label for="fixture-count-input">Number of Matches</label>
+          <input type="number" id="fixture-count-input" min="1" max="20" value="1" required>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary-outline" data-close="fixture-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Schedule</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MATCH RESULT & GOAL EVENT MODAL (Completed Match Score & Scorers) -->
+  <div id="result-modal" class="modal-overlay">
+    <div class="modal-content glass-panel large-modal animate-scale">
+      <div class="modal-header">
+        <h3>Match Center & Goal Scorers</h3>
+        <button class="btn-close-modal" data-close="result-modal">&times;</button>
+      </div>
+      
+      <!-- Match header info -->
+      <div class="match-scorecard-header">
+        <div class="team-meta home-meta">
+          <span id="result-home-emblem" class="team-emblem-large">HOME</span>
+          <span id="result-home-name" class="team-name-large">Home Team</span>
+        </div>
+        <div class="score-vs-container">
+          <input type="number" id="result-home-score" min="0" value="0" class="score-input" aria-label="Home team score" title="Home team score">
+          <span class="score-separator">:</span>
+          <input type="number" id="result-away-score" min="0" value="0" class="score-input" aria-label="Away team score" title="Away team score">
+        </div>
+        <div class="team-meta away-meta">
+          <span id="result-away-name" class="team-name-large">Away Team</span>
+          <span id="result-away-emblem" class="team-emblem-large">AWAY</span>
+        </div>
+      </div>
+
+      <div class="match-status-toggle">
+        <label class="toggle-container">
+          <input type="checkbox" id="result-completed-checkbox" checked>
+          <span class="toggle-slider"></span>
+          <span class="toggle-label">Mark Match as Completed</span>
+        </label>
+      </div>
+
+      <!-- Goal Scorers section (only enabled if score > 0 and status is completed) -->
+      <div id="goal-scorers-manager" class="goal-scorers-manager">
+        <div class="manager-layout-grid">
+          <!-- Home Goal Scorers -->
+          <div class="team-scorers-section">
+            <h4 class="team-title-accent" id="home-scorers-title">Home Scorers</h4>
+            <div id="home-goals-list" class="goals-entry-list">
+              <!-- Dynamically added goal inputs (scorer name + minute) -->
+            </div>
+            <button type="button" id="add-home-goal-btn" class="btn btn-secondary-outline btn-sm w-100">
+              <i data-lucide="plus"></i> Add Home Scorer
+            </button>
+          </div>
+
+          <!-- Away Goal Scorers -->
+          <div class="team-scorers-section">
+            <h4 class="team-title-accent" id="away-scorers-title">Away Scorers</h4>
+            <div id="away-goals-list" class="goals-entry-list">
+              <!-- Dynamically added goal inputs (select player + minute) -->
+            </div>
+            <button type="button" id="add-away-goal-btn" class="btn btn-secondary-outline btn-sm w-100">
+              <i data-lucide="plus"></i> Add Away Scorer
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <form id="result-form">
+        <input type="hidden" id="result-fixture-id-input">
+        <div class="modal-actions mt-4">
+          <button type="button" class="btn btn-secondary-outline" data-close="result-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Match Result</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Javascript -->
+  <script src="app.js"></script>
+</body>
+</html>
